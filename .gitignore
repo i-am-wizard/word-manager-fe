@@ -1,0 +1,34 @@
+# Dependency directory
+node_modules/
+
+# Vite build output
+dist/
+
+# Local env files
+.env
+.env.*.local
+
+# Vite cache
+.vite/
+
+# Log files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editor settings
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Optional: macOS/Linux trash folder
+.Trashes
+
