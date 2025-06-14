@@ -1,8 +1,8 @@
 FROM node:22-alpine AS builder
 WORKDIR /app
-COPY vite-frontend /app
-RUN npm install && npm run build
+COPY vite-frontend/ ./
+RUN npm ci && npm run build
 
-FROM nginx:alpine 
+FROM nginx:alpine
 COPY --from=builder /app/dist /usr/share/nginx/html
-COPY ./nginx/default.conf /etc/nginx/conf.d/default.conf
+COPY vite-frontend/nginx/default.conf /etc/nginx/conf.d/default.conf
