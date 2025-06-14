@@ -1,0 +1,1 @@
+# word-manager-fe
