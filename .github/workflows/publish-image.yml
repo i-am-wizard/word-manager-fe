@@ -14,15 +14,21 @@ jobs:
       registry: ${{ steps.login-ecr.outputs.registry }}
       image: ${{ steps.login-ecr.outputs.registry }}/${{ env.IMAGE_NAME }}
     steps:
+      - name: Debug Secrets
+        run: |
+          echo "Checking secret lengths..."
+          echo "Key ID length: ${#AWS_KEY}"
+          echo "Secret Key length: ${#AWS_SECRET}"
+        env:
+          AWS_KEY: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: eu-west-2
-
-      - name: Verify AWS Identity
-        run: aws sts get-caller-identity    
+          aws-region: eu-west-2  
 
       - name: Login to ECR
         id: login-ecr
