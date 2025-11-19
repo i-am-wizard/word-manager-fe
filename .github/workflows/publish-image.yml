@@ -10,9 +10,6 @@ env:
 jobs:
   setup:
     runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
     outputs:
       registry: ${{ steps.login-ecr.outputs.registry }}
       image: ${{ steps.login-ecr.outputs.registry }}/${{ env.IMAGE_NAME }}
