@@ -4,48 +4,25 @@ on:
   push:
 
 env:
-  IMAGE_NAME: word-manager-frontend
+  AWS_REGION: eu-west-2
+  FULL_IMAGE: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-2.amazonaws.com/word-manager-frontend
   SEMVER: 1.0.0
+  
+permissions:
+  id-token: write
+  contents: read  
 
 jobs:
-  setup:
-    runs-on: ubuntu-latest
-    outputs:
-      registry: ${{ steps.login-ecr.outputs.registry }}
-      image: ${{ steps.login-ecr.outputs.registry }}/${{ env.IMAGE_NAME }}
-    steps:
-      - name: Debug Secrets
-        run: |
-          echo "Checking secret lengths..."
-          echo "Key ID length: ${#AWS_KEY}"
-          echo "Secret Key length: ${#AWS_SECRET}"
-        env:
-          AWS_KEY: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: eu-west-2  
-
-      - name: Login to ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
-
   build-and-push:
-    needs: setup
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
+      id-token: write
     strategy:
       fail-fast: false
       matrix:
-        platform:
-          - linux/amd64
-          - linux/arm64
+        platform: [linux/amd64, linux/arm64]
     steps:
       - name: Prepare
         run: |
@@ -56,14 +33,13 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ needs.setup.outputs.image }}
-
+          images: ${{ env.FULL_IMAGE }}
+     
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: eu-west-2
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
 
       - name: Login to ECR
         uses: aws-actions/amazon-ecr-login@v2
@@ -80,7 +56,7 @@ jobs:
         with:
           platforms: ${{ matrix.platform }}
           labels: ${{ steps.meta.outputs.labels }}
-          tags: ${{ needs.setup.outputs.image }}
+          tags: ${{ env.FULL_IMAGE }}
           outputs: type=image,push-by-digest=true,name-canonical=true,push=true
 
       - name: Export digest
@@ -102,8 +78,8 @@ jobs:
     permissions:
       contents: read
       packages: write
+      id-token: write
     needs: 
-      - setup
       - build-and-push
     steps:
       - name: Download digests
@@ -116,12 +92,10 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: eu-west-2
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
 
       - name: Login to ECR
-        id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Set up Docker Buildx
@@ -131,15 +105,15 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ needs.setup.outputs.image }}
+          images: ${{ env.FULL_IMAGE }}
           tags: type=raw,value=${{ env.SEMVER }}-${{ github.run_number }}
 
       - name: Create manifest list and push
         working-directory: ${{ runner.temp }}/digests
         run: |
           docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
-            $(printf '${{ needs.setup.outputs.image }}@sha256:%s ' *)
+            $(printf '${{ env.FULL_IMAGE }}@sha256:%s ' *)
 
       - name: Inspect image
         run: |
-          docker buildx imagetools inspect ${{ needs.setup.outputs.image }}:${{ steps.meta.outputs.version }}
+          docker buildx imagetools inspect ${{ env.FULL_IMAGE }}:${{ steps.meta.outputs.version }}
