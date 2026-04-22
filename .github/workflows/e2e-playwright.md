@@ -75,8 +75,38 @@ Write and execute the following E2E scenarios using Playwright's test runner:
 - Type only spaces into the input
 - Verify the "Update Word" button stays disabled (the app trims input)
 
+## Test Configuration
+
+When writing the Playwright config (`playwright.config.ts`), enable:
+
+- **Reporter**: Use `--reporter=list` when running tests so every test's pass/fail is printed line-by-line
+- **Tracing**: Set `use: { trace: 'on' }` in the Playwright config so a full trace is recorded for every test
+- **Screenshots**: Set `use: { screenshot: 'on' }` to capture a screenshot after every test (not just failures)
+
 ## Reporting
 
-- If all tests pass, post a PR comment summarising the results with a ✅
-- If any test fails, post a PR comment with the failure details, screenshots, and a ❌
-- Include the list of scenarios tested and their pass/fail status
+The PR comment **must** include all of the following sections as concrete evidence the tests actually ran:
+
+### 1. Test Results Summary
+- A table of each scenario with its pass/fail status (✅ / ❌)
+
+### 2. Raw Terminal Output
+- The **complete, unedited** terminal output from the Playwright test run
+- Wrap in a collapsed `<details><summary>Playwright terminal output</summary>` block
+
+### 3. Test Code
+- Paste the **full test file** the agent wrote (the `.spec.ts` file)
+- Wrap in a collapsed `<details><summary>Test source code</summary>` block
+
+### 4. Screenshots
+- Attach or embed the screenshots captured after each test scenario
+- Name each screenshot after its scenario (e.g. `01-initial-load.png`, `02-update-word.png`)
+
+### 5. Trace Files
+- Run `npx playwright show-trace` to extract a human-readable summary from each `.zip` trace file
+- Include the trace summary for every test in a collapsed `<details><summary>Playwright traces</summary>` block
+- List each trace file name and its corresponding scenario
+
+### Final status
+- Lead the comment with ✅ if all tests pass, or ❌ if any test fails
+- If any test fails, include the failure details and error messages prominently before the collapsed sections
