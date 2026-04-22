@@ -34,9 +34,25 @@ must be intercepted so the tests are fully self-contained with no live backend d
 ## Setup
 
 1. `cd vite-frontend && npm ci`
-2. `npx playwright install --with-deps chromium`
-3. Start the Vite dev server in the background: `npm run dev -- --port 5173 &`
-4. Wait until `http://localhost:5173` responds before running tests.
+2. Do NOT install Playwright browsers separately — use the system-installed Chromium at `/usr/bin/chromium` by setting `executablePath` in the Playwright config
+3. Use Playwright's built-in `webServer` config to start Vite automatically — do NOT start Vite manually
+
+Example `playwright.config.ts`:
+```ts
+import { defineConfig } from '@playwright/test';
+export default defineConfig({
+  testDir: './e2e',
+  use: {
+    baseURL: 'http://127.0.0.1:5173',
+    launchOptions: { executablePath: '/usr/bin/chromium' },
+  },
+  webServer: {
+    command: 'npm run dev -- --port 5173 --host 127.0.0.1',
+    url: 'http://127.0.0.1:5173',
+    reuseExistingServer: false,
+  },
+});
+```
 
 ## API Mocking Strategy
 
@@ -57,7 +73,7 @@ word back in the response so the UI reflects the update.
 Write and execute the following E2E scenarios using Playwright's test runner:
 
 ### 1. Initial Page Load
-- Navigate to `http://localhost:5173`
+- Navigate to the app
 - Verify the heading "Word Manager" is visible
 - Verify the mocked current word "hello" appears on the page
 
@@ -75,38 +91,13 @@ Write and execute the following E2E scenarios using Playwright's test runner:
 - Type only spaces into the input
 - Verify the "Update Word" button stays disabled (the app trims input)
 
-## Test Configuration
-
-When writing the Playwright config (`playwright.config.ts`), enable:
-
-- **Reporter**: Use `--reporter=list` when running tests so every test's pass/fail is printed line-by-line
-- **Tracing**: Set `use: { trace: 'on' }` in the Playwright config so a full trace is recorded for every test
-- **Screenshots**: Set `use: { screenshot: 'on' }` to capture a screenshot after every test (not just failures)
-
 ## Reporting
 
-The PR comment **must** include all of the following sections as concrete evidence the tests actually ran:
+Post a single PR comment with:
 
-### 1. Test Results Summary
-- A table of each scenario with its pass/fail status (✅ / ❌)
+1. **Status**: ✅ if all tests pass, ❌ if any fail
+2. **Results table**: each scenario name with pass/fail status
+3. **Terminal output**: the complete `npx playwright test --reporter=list` output in a collapsed `<details>` block
+4. **Test code**: the full `.spec.ts` file in a collapsed `<details>` block
 
-### 2. Raw Terminal Output
-- The **complete, unedited** terminal output from the Playwright test run
-- Wrap in a collapsed `<details><summary>Playwright terminal output</summary>` block
-
-### 3. Test Code
-- Paste the **full test file** the agent wrote (the `.spec.ts` file)
-- Wrap in a collapsed `<details><summary>Test source code</summary>` block
-
-### 4. Screenshots
-- Attach or embed the screenshots captured after each test scenario
-- Name each screenshot after its scenario (e.g. `01-initial-load.png`, `02-update-word.png`)
-
-### 5. Trace Files
-- Run `npx playwright show-trace` to extract a human-readable summary from each `.zip` trace file
-- Include the trace summary for every test in a collapsed `<details><summary>Playwright traces</summary>` block
-- List each trace file name and its corresponding scenario
-
-### Final status
-- Lead the comment with ✅ if all tests pass, or ❌ if any test fails
-- If any test fails, include the failure details and error messages prominently before the collapsed sections
+Do NOT embed screenshots or trace files in the comment. Keep reporting simple and fast.
