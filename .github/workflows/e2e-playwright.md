@@ -34,25 +34,9 @@ must be intercepted so the tests are fully self-contained with no live backend d
 ## Setup
 
 1. `cd vite-frontend && npm ci`
-2. Do NOT install Playwright browsers separately — use the system-installed Chromium at `/usr/bin/chromium` by setting `executablePath` in the Playwright config
-3. Use Playwright's built-in `webServer` config to start Vite automatically — do NOT start Vite manually
-
-Example `playwright.config.ts`:
-```ts
-import { defineConfig } from '@playwright/test';
-export default defineConfig({
-  testDir: './e2e',
-  use: {
-    baseURL: 'http://127.0.0.1:5173',
-    launchOptions: { executablePath: '/usr/bin/chromium' },
-  },
-  webServer: {
-    command: 'npm run dev -- --port 5173 --host 127.0.0.1',
-    url: 'http://127.0.0.1:5173',
-    reuseExistingServer: false,
-  },
-});
-```
+2. The `playwright.config.ts` and `@playwright/test` package are already committed — do NOT recreate them
+3. Do NOT install Playwright browsers separately — the config already uses the system-installed Chromium
+4. Write test files into the `e2e-tests/` directory as defined in the existing config
 
 ## API Mocking Strategy
 
@@ -99,6 +83,6 @@ Post a single PR comment with:
 2. **Results table**: each scenario name with pass/fail status
 3. **Terminal output**: the complete `npx playwright test --reporter=list` output in a collapsed `<details>` block
 4. **Test code**: the full `.spec.ts` file in a collapsed `<details>` block
-5. **Trace summary**: enable `trace: 'on'` in the Playwright config, then after the test run, unzip each trace `.zip` and extract the action names and durations from the trace JSON files. Include a per-scenario trace summary in a collapsed `<details>` block
+5. **Trace summary**: after the test run, unzip each trace `.zip` and extract the action names and durations from the trace JSON files. Include a per-scenario trace summary in a collapsed `<details>` block
 
 Do NOT embed screenshots or base64 images in the comment. Keep reporting text-only and fast.
