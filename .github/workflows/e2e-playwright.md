@@ -24,6 +24,12 @@ permissions:
 safe-outputs:
   add-comment:
     max: 1
+  push-to-pull-request-branch:
+    max: 1
+  upload-asset:
+    branch: "assets/e2e-traces"
+    allowed-exts: [.zip]
+    max: 10  
 ---
 
 # E2E Playwright Tests
@@ -34,8 +40,8 @@ must be intercepted so the tests are fully self-contained with no live backend d
 ## Setup
 
 1. `cd vite-frontend && npm ci`
-2. The `playwright.config.ts` and `@playwright/test` package are already committed — do NOT recreate them
-3. Do NOT install Playwright browsers separately — the config already uses the system-installed Chromium
+2. The `playwright.config.ts` and `@playwright/test` package are already committed - do NOT recreate them
+3. Do NOT install Playwright browsers separately - the config already uses the system-installed Chromium
 4. Write test files into the `e2e-tests/` directory as defined in the existing config
 
 ## API Mocking Strategy
@@ -44,7 +50,7 @@ The app communicates with the backend through these endpoints (proxied via Vite 
 
 | Method | Path         | Request Body           | Response Body         |
 |--------|------------- |------------------------|-----------------------|
-| GET    | `/api/word`  | —                      | `{ "word": "hello" }` |
+| GET    | `/api/word`  | -                      | `{ "word": "hello" }` |
 | PUT    | `/api/word`  | `{ "word": "<value>" }`| `{ "word": "<value>" }`|
 
 **Intercept every `/api/*` route** using Playwright's `page.route()` before each test so
@@ -61,13 +67,13 @@ Write and execute the following E2E scenarios using Playwright's test runner:
 - Verify the heading "Word Manager" is visible
 - Verify the mocked current word "hello" appears on the page
 
-### 2. Update Word — Happy Path
+### 2. Update Word - Happy Path
 - Fill the input with a new word (e.g. "world")
 - Click the "Update Word" button
 - Intercept the PUT request and confirm the request body contains `{ "word": "world" }`
 - Verify the displayed current word updates to "world"
 
-### 3. Empty Input — Button Disabled
+### 3. Empty Input - Button Disabled
 - Verify the "Update Word" button is disabled when the input is empty
 - Clear the input field and confirm the button remains disabled
 
@@ -83,6 +89,15 @@ Post a single PR comment with:
 2. **Results table**: each scenario name with pass/fail status
 3. **Terminal output**: the complete `npx playwright test --reporter=list` output in a collapsed `<details>` block
 4. **Test code**: the full `.spec.ts` file in a collapsed `<details>` block
-5. **Trace summary**: after the test run, unzip each trace `.zip` and extract the action names and durations from the trace JSON files. Include a per-scenario trace summary in a collapsed `<details>` block
+5. **Trace uploads**: `trace: 'on'` is already enabled in the Playwright config. After the test run, upload each trace `.zip` from `test-results/` using the `upload_asset` tool. Include download links for the uploaded traces in the PR comment.
 
 Do NOT embed screenshots or base64 images in the comment. Keep reporting text-only and fast.
+
+## Commit Spec File to PR Branch
+
+After running the tests, check whether `vite-frontend/e2e-tests/word-manager.spec.ts` already exists on the PR branch.
+
+- If the file **does not exist**, commit it to the PR branch with message: `test: add e2e test spec`
+- If the file **already exists**, skip the commit - do NOT push a duplicate
+
+Do NOT commit trace files, test-results, or any other generated artifacts.
