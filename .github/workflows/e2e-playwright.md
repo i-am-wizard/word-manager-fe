@@ -99,5 +99,6 @@ Post a single PR comment with:
 2. **Results table**: each scenario name with pass/fail status
 3. **Terminal output**: the complete `npx playwright test --reporter=list` output in a collapsed `<details>` block
 4. **Test code**: the full `.spec.ts` file in a collapsed `<details>` block
+5. **Trace summary**: enable `trace: 'on'` in the Playwright config, then after the test run, unzip each trace `.zip` and extract the action names and durations from the trace JSON files. Include a per-scenario trace summary in a collapsed `<details>` block
 
-Do NOT embed screenshots or trace files in the comment. Keep reporting simple and fast.
+Do NOT embed screenshots or base64 images in the comment. Keep reporting text-only and fast.
